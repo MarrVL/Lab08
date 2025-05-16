@@ -46,6 +46,9 @@ fun TaskScreen(viewModel: TaskViewModel) {
     val tasks by viewModel.tasks.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     var newTaskDescription by remember { mutableStateOf("") }
+    var editingTask by remember { mutableStateOf<Task?>(null) }
+    var editedDescription by remember { mutableStateOf("") }
+
 
 
     Column(
@@ -82,13 +85,36 @@ fun TaskScreen(viewModel: TaskViewModel) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = task.description)
-                Button(onClick = { viewModel.toggleTaskCompletion(task) }) {
-                    Text(if (task.isCompleted) "Completada" else "Pendiente")
+                if (editingTask == task) {
+                    TextField(
+                        value = editedDescription,
+                        onValueChange = { editedDescription = it },
+                        modifier = Modifier.weight(1f)
+                    )
+                    Button(onClick = {
+                        viewModel.editTask(task, editedDescription)
+                        editingTask = null
+                        editedDescription = ""
+                    }) {
+                        Text("Guardar")
+                    }
+                } else {
+                    Text(text = task.description, modifier = Modifier.weight(1f))
+                    Button(onClick = { viewModel.toggleTaskCompletion(task) }) {
+                        Text(if (task.isCompleted) "✅" else "🕒")
+                    }
+                    Button(onClick = {
+                        editingTask = task
+                        editedDescription = task.description
+                    }) {
+                        Text("✏️")
+                    }
+                    Button(onClick = { viewModel.deleteTask(task) }) {
+                        Text("🗑️")
+                    }
                 }
             }
         }
-
 
         Button(
             onClick = { coroutineScope.launch { viewModel.deleteAllTasks() } },
